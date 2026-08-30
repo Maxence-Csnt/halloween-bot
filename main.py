@@ -10,8 +10,10 @@ from dotenv import load_dotenv
 # Chargement des variables d'environnement 🔐
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
-ROLE_ID = os.getenv("ROLE_ID")
+
+# ⚙️ CONFIGURATION DES IDS ET VARIABLES
+CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "1121406821338697841"))
+ROLE_ID = os.environ.get("ROLE_ID", "1361669204121489428")  # Remplace par ton vrai ID de rôle
 
 # Flux RSS officiels 📡
 YOUTUBE_RSS = "https://www.youtube.com/feeds/videos.xml?channel_id=UC2glyidA33L3S8-M8eY9M4Q"
