@@ -1,4 +1,4 @@
-name: Build and Push HA-Bot Image 🐍
+name: Compiler et publier l'image HA-Bot 🐍
 
 on:
   push:
