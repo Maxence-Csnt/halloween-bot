@@ -7,16 +7,22 @@ from discord.ext import commands, tasks
 import feedparser
 from dotenv import load_dotenv
 
-# Chargement des variables d'environnement 🔐
+# Chargement du Token Discord (.env) 🔐
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-# ⚙️ CONFIGURATION DES IDS ET VARIABLES (Défini via GitHub ou Docker) 🎯
-raw_channel_id = os.environ.get("CHANNEL_ID", "1524681318271684741").strip()
-CHANNEL_ID = int(raw_channel_id) if raw_channel_id else 1524681318271684741
+# --- CHARGEMENT DE LA CONFIGURATION JSON --- ⚙️
+CONFIG_FILE = "bot_config.json"
 
-raw_role_id = os.environ.get("ROLE_ID", "1543531468070854697").strip()
-ROLE_ID = raw_role_id if raw_role_id else "1543531468070854697"
+if os.path.exists(CONFIG_FILE):
+    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+        config = json.load(f)
+    CHANNEL_ID = int(config.get("CHANNEL_ID", 1524681318271684741))
+    ROLE_ID = str(config.get("ROLE_ID", "1543531468070854697"))
+else:
+    # Valeurs de secours si le fichier n'existe pas 🛡️
+    CHANNEL_ID = 1524681318271684741
+    ROLE_ID = "1543531468070854697"
 
 # Flux RSS officiels 📡
 YOUTUBE_RSS = "https://www.youtube.com/feeds/videos.xml?channel_id=UC2glyidA33L3S8-M8eY9M4Q"
@@ -29,7 +35,7 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# --- GESTION DU FICHIER JSON --- 📁
+# --- GESTION DU FICHIER JSON D'ÉTAT --- 📁
 def load_state():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r") as f:
@@ -64,12 +70,13 @@ async def on_ready():
     await bot.change_presence(activity=activite)
     
     print(f"✅ Bot connecté sous l'identifiant {bot.user} 🤖")
+    print(f"📌 Salon cible : {CHANNEL_ID}")
+    print(f"👥 Rôle mentionné : {ROLE_ID}")
     check_updates.start()
 
 # --- COMMANDE DE TEST 🧪 ---
 @bot.command()
 async def testlive(ctx):
-    """Teste l'envoi du live puis sa mise à jour automatique avec le lien de la Release Note"""
     try:
         await ctx.message.delete()
     except Exception:
@@ -77,7 +84,6 @@ async def testlive(ctx):
 
     role_mention = f"<@&{ROLE_ID}>" if ROLE_ID else ""
 
-    # 1. Embed initial (Début du Live) 🔴
     embed = discord.Embed(
         title="🔴 [TEST] Live Home Assistant : Release Party",
         description="Le live mensuel Home Assistant démarre ! Clique sur le bouton ci-dessous pour suivre le direct.",
@@ -91,10 +97,8 @@ async def testlive(ctx):
     test_msg = await ctx.send(content=f"🔴 {role_mention} Le live va commencer !", embed=embed, view=view)
     print("🧪 Test : Live initial publié 🔴")
 
-    # Attente de 10 secondes pour simuler la fin du live ⏳
     await asyncio.sleep(10)
 
-    # 2. Récupération dynamique de la vraie Release Note 📝
     release_url, release_title = await get_latest_release_url()
 
     new_embed = test_msg.embeds[0]
@@ -118,7 +122,6 @@ async def check_updates():
 
     role_mention = f"<@&{ROLE_ID}>" if ROLE_ID else ""
 
-    # 1. Détection du Live sur YouTube 🔴
     try:
         yt_feed = feedparser.parse(YOUTUBE_RSS)
         if yt_feed.entries:
@@ -149,7 +152,6 @@ async def check_updates():
     except Exception as e:
         print(f"⚠️ Erreur YouTube RSS : {e} ❌")
 
-    # 2. Détection et mise à jour avec la nouvelle Release Note 📝
     if state["is_live"] and state["message_id"]:
         try:
             release_url, release_title = await get_latest_release_url()
