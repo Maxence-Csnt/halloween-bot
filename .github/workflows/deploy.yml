@@ -8,11 +8,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    # --- PERMISSIONS NECESSAIRES POUR GHCR --- 🔑
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Étape indispensable pour passer le nom d'utilisateur en minuscules 🔤
       - name: Convert repository owner to lowercase
         run: |
           echo "REPO_OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
