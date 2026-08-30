@@ -53,7 +53,7 @@ async def get_latest_release_url():
 
 @bot.event
 async def on_ready():
-    activite = discord.Activity(type=discord.CustomActivity, name="BOT EN BETA !")
+    activite = discord.Activity(type=discord.ActivityType.playing, name="BOT EN BETA !")
     await bot.change_presence(activity=activite)
     print(f"✅ Bot connecté : {bot.user} 🤖")
     print(f"📌 Salon : {CHANNEL_ID} | 👥 Rôle : {ROLE_ID}")
