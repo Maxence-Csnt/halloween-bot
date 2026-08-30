@@ -1,1 +1,4 @@
-h
+discord.py
+feedparser
+python-dotenv
+aiohttp
