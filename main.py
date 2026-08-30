@@ -1,5 +1,4 @@
 import os
-import json
 import asyncio
 import re
 import discord
@@ -7,74 +6,60 @@ from discord.ext import commands, tasks
 import feedparser
 from dotenv import load_dotenv
 
-# Chargement du Token Discord (.env) 🔐
+# Chargement des variables d'environnement 🔐
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-# --- CHARGEMENT DE LA CONFIGURATION JSON --- ⚙️
-CONFIG_FILE = "bot_config.json"
+# --- CONFIGURATION HARCODÉE (Modifiable directement ici sur GitHub) --- ⚙️
+CHANNEL_ID = 1524681318271684741
+ROLE_ID = "1543531468070854697"
 
-if os.path.exists(CONFIG_FILE):
-    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-        config = json.load(f)
-    CHANNEL_ID = int(config.get("CHANNEL_ID", 1524681318271684741))
-    ROLE_ID = str(config.get("ROLE_ID", "1543531468070854697"))
-else:
-    # Valeurs de secours si le fichier n'existe pas 🛡️
-    CHANNEL_ID = 1524681318271684741
-    ROLE_ID = "1543531468070854697"
-
-# Flux RSS officiels 📡
+# Flux RSS 📡
 YOUTUBE_RSS = "https://www.youtube.com/feeds/videos.xml?channel_id=UC2glyidA33L3S8-M8eY9M4Q"
 BLOG_RSS = "https://www.home-assistant.io/atom.xml"
 DATA_FILE = "state.json"
 
-# Activation des Intents Discord ⚙️
+# Intents Discord ⚙️
 intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# --- GESTION DU FICHIER JSON D'ÉTAT --- 📁
+# --- GESTION DU FICHIER D'ÉTAT --- 📁
 def load_state():
     if os.path.exists(DATA_FILE):
+        import json
         with open(DATA_FILE, "r") as f:
             return json.load(f)
     return {"video_id": None, "message_id": None, "is_live": False}
 
 def save_state(state):
+    import json
     with open(DATA_FILE, "w") as f:
         json.dump(state, f, indent=4)
 
 state = load_state()
 
-# --- RÉCUPÉRATION DYNAMIQUE DU LIEN DE LA RELEASE NOTE --- 📖
+# --- RÉCUPÉRATION RELEASE NOTE --- 📖
 async def get_latest_release_url():
-    """Récupère l'URL exacte de la release note de la nouvelle mise à jour"""
     try:
         blog_feed = feedparser.parse(BLOG_RSS)
         for entry in blog_feed.entries:
             if "release" in entry.title.lower() or re.search(r"\b202\d\.\d", entry.title):
                 return entry.link, entry.title
     except Exception as e:
-        print(f"⚠️ Erreur récupération Release Note : {e} ❌")
-    
+        print(f"⚠️ Erreur Release Note : {e} ❌")
     return "https://www.home-assistant.io/blog/", "Release Note Home Assistant"
 
 @bot.event
 async def on_ready():
-    activite = discord.Activity(
-        type=discord.ActivityType.watching, 
-        name="BOT EN BETA !"
-    )
+    activite = discord.Activity(type=discord.ActivityType.watching, name="BOT EN BETA !")
     await bot.change_presence(activity=activite)
-    
-    print(f"✅ Bot connecté sous l'identifiant {bot.user} 🤖")
-    print(f"📌 Salon cible : {CHANNEL_ID}")
-    print(f"👥 Rôle mentionné : {ROLE_ID}")
+    print(f"✅ Bot connecté : {bot.user} 🤖")
+    print(f"📌 Salon : {CHANNEL_ID} | 👥 Rôle : {ROLE_ID}")
     check_updates.start()
 
-# --- COMMANDE DE TEST 🧪 ---
+# --- COMMANDE TEST 🧪 ---
 @bot.command()
 async def testlive(ctx):
     try:
@@ -83,10 +68,9 @@ async def testlive(ctx):
         pass
 
     role_mention = f"<@&{ROLE_ID}>" if ROLE_ID else ""
-
     embed = discord.Embed(
         title="🔴 [TEST] Live Home Assistant : Release Party",
-        description="Le live mensuel Home Assistant démarre ! Clique sur le bouton ci-dessous pour suivre le direct.",
+        description="Le live mensuel démarre ! Clique ci-dessous pour suivre le direct.",
         color=discord.Color.red()
     )
     embed.set_thumbnail(url="https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg")
@@ -95,25 +79,21 @@ async def testlive(ctx):
     view.add_item(discord.ui.Button(label="Regarder le Live 📺", url="https://www.youtube.com/@home_assistant/streams", style=discord.ButtonStyle.link))
 
     test_msg = await ctx.send(content=f"🔴 {role_mention} Le live va commencer !", embed=embed, view=view)
-    print("🧪 Test : Live initial publié 🔴")
-
     await asyncio.sleep(10)
 
     release_url, release_title = await get_latest_release_url()
-
     new_embed = test_msg.embeds[0]
     new_embed.title = f"🎬 [TEST] Live Terminé — {release_title}"
-    new_embed.description = "Le live est terminé ! Retrouve l'enregistrement vidéo ainsi que la release note officielle."
+    new_embed.description = "Le live est terminé !"
     new_embed.color = discord.Color.green()
 
     new_view = discord.ui.View()
     new_view.add_item(discord.ui.Button(label="Revoir le Live 📺", url="https://www.youtube.com/@home_assistant/streams", style=discord.ButtonStyle.link))
     new_view.add_item(discord.ui.Button(label="Release Note 📖", url=release_url, style=discord.ButtonStyle.link))
 
-    await test_msg.edit(content=f"🎬 {role_mention} Le live est terminé et la release note est disponible !", embed=new_embed, view=new_view)
-    print(f"✅ Test : Mis à jour avec {release_url} 🟢")
+    await test_msg.edit(content=f"🎬 {role_mention} Le live est terminé !", embed=new_embed, view=new_view)
 
-# --- BOUCLE AUTOMATIQUE 🔄 ---
+# --- BOUCLE AUTO 🔄 ---
 @tasks.loop(minutes=2)
 async def check_updates():
     channel = bot.get_channel(CHANNEL_ID)
@@ -133,7 +113,7 @@ async def check_updates():
             if state["video_id"] != video_id:
                 embed = discord.Embed(
                     title=f"🔴 Live Home Assistant : {video_title}",
-                    description="Le live mensuel Home Assistant démarre ! Clique sur le bouton ci-dessous pour suivre la présentation.",
+                    description="Le live commence !",
                     color=discord.Color.red()
                 )
                 embed.set_thumbnail(url=f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg")
@@ -147,20 +127,17 @@ async def check_updates():
                 state["message_id"] = message.id
                 state["is_live"] = True
                 save_state(state)
-                print(f"🎬 Nouveau live détecté : {video_title} 🔴")
 
     except Exception as e:
-        print(f"⚠️ Erreur YouTube RSS : {e} ❌")
+        print(f"⚠️ Erreur YouTube : {e} ❌")
 
     if state["is_live"] and state["message_id"]:
         try:
             release_url, release_title = await get_latest_release_url()
-
             message = await channel.fetch_message(state["message_id"])
 
             new_embed = message.embeds[0]
             new_embed.title = f"🎬 Live Terminé — {release_title}"
-            new_embed.description = "Le live est terminé ! Retrouve l'enregistrement vidéo ainsi que la release note officielle."
             new_embed.color = discord.Color.green()
 
             new_view = discord.ui.View()
@@ -168,15 +145,11 @@ async def check_updates():
             new_view.add_item(discord.ui.Button(label="Revoir le Live 📺", url=yt_url, style=discord.ButtonStyle.link))
             new_view.add_item(discord.ui.Button(label="Release Note 📖", url=release_url, style=discord.ButtonStyle.link))
 
-            await message.edit(content=f"🎬 {role_mention} Le live est terminé et la release note officielle est disponible !", embed=new_embed, view=new_view)
-
+            await message.edit(content=f"🎬 {role_mention} Le live est terminé !", embed=new_embed, view=new_view)
             state["is_live"] = False
             save_state(state)
-            print(f"✅ Message mis à jour avec la Release Note ({release_url}) 🟢")
 
-        except discord.NotFound:
-            print("❌ Message introuvable sur Discord.")
         except Exception as e:
-            print(f"⚠️ Erreur mise à jour Release Note : {e} ❌")
+            print(f"⚠️ Erreur update : {e} ❌")
 
 bot.run(DISCORD_TOKEN)
