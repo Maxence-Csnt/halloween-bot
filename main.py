@@ -11,9 +11,12 @@ from dotenv import load_dotenv
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-# ⚙️ CONFIGURATION DES IDS ET VARIABLES
-CHANNEL_ID = 1524681318271684741  # Ton ID de salon 📌
-ROLE_ID = "1543531468070854697"    # Ton ID de rôle (ou None si aucun) 👥
+# ⚙️ CONFIGURATION DES IDS ET VARIABLES (Défini via GitHub ou Docker) 🎯
+raw_channel_id = os.environ.get("CHANNEL_ID", "1524681318271684741").strip()
+CHANNEL_ID = int(raw_channel_id) if raw_channel_id else 1524681318271684741
+
+raw_role_id = os.environ.get("ROLE_ID", "1543531468070854697").strip()
+ROLE_ID = raw_role_id if raw_role_id else "1543531468070854697"
 
 # Flux RSS officiels 📡
 YOUTUBE_RSS = "https://www.youtube.com/feeds/videos.xml?channel_id=UC2glyidA33L3S8-M8eY9M4Q"
@@ -45,7 +48,6 @@ async def get_latest_release_url():
     try:
         blog_feed = feedparser.parse(BLOG_RSS)
         for entry in blog_feed.entries:
-            # Recherche du post de Release officiel (ex: "/release-20268/")
             if "release" in entry.title.lower() or re.search(r"\b202\d\.\d", entry.title):
                 return entry.link, entry.title
     except Exception as e:
@@ -55,7 +57,6 @@ async def get_latest_release_url():
 
 @bot.event
 async def on_ready():
-    # Application du statut "BOT EN BETA !" 🤖
     activite = discord.Activity(
         type=discord.ActivityType.watching, 
         name="BOT EN BETA !"
@@ -69,8 +70,6 @@ async def on_ready():
 @bot.command()
 async def testlive(ctx):
     """Teste l'envoi du live puis sa mise à jour automatique avec le lien de la Release Note"""
-    
-    # Suppression automatique du message de la commande 🗑️
     try:
         await ctx.message.delete()
     except Exception:
