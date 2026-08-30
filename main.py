@@ -12,8 +12,8 @@ load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
 # ⚙️ CONFIGURATION DES IDS ET VARIABLES
-CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "1121406821338697841"))
-ROLE_ID = os.environ.get("ROLE_ID", "1361669204121489428")  # Remplace par ton vrai ID de rôle
+CHANNEL_ID = 1524681318271684741  # Ton ID de salon 📌
+ROLE_ID = "1543531468070854697"    # Ton ID de rôle (ou None si aucun) 👥
 
 # Flux RSS officiels 📡
 YOUTUBE_RSS = "https://www.youtube.com/feeds/videos.xml?channel_id=UC2glyidA33L3S8-M8eY9M4Q"
