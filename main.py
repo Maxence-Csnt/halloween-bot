@@ -1,35 +1,42 @@
 import os
 import discord
-from discord.ext import commands
+from discord import app_commands
 
-# Configuration des intentions (intents)
+# Configuration des intentions (pas besoin d'intents privilégiés pour les slash commands de base !)
 intents = discord.Intents.default()
-intents.message_content = True  # Nécessaire pour lire le contenu des messages / commandes
 
-# Création du bot avec le préfixe '!'
-bot = commands.Bot(command_prefix='!', intents=intents)
+class HalloweenBot(discord.Client):
+    def __init__(self):
+        super().__init__(intents=intents)
+        self.tree = app_commands.CommandTree(self)
 
-@bot.event
+    async def setup_hook(self):
+        # Synchronise les commandes slash avec Discord
+        await self.tree.sync()
+        print("🎃 Commandes slash synchronisées avec succès !")
+
+client = HalloweenBot()
+
+@client.event
 async def on_ready():
-    print(f"🎃 Bot Halloween connecté avec succès en tant que {bot.user} !")
-    # Change l'activité du bot dans Discord
-    await bot.change_presence(activity=discord.Game(name="Distribuer des bonbons 🍬 | !halloween"))
+    print(f"👻 Bot Halloween connecté et prêt en tant que {client.user} !")
+    await client.change_presence(activity=discord.Game(name="Distribuer des bonbons 🍬 | /halloween"))
 
-@bot.command()
-async def halloween(ctx):
-    """Commande de test pour vérifier que le bot répond !"""
+# Définition de la commande slash /halloween
+@client.tree.command(name="halloween", description="Reçois un message terrifiant et festif d'Halloween ! 🎃")
+async def halloween(interaction: discord.Interaction):
     embed = discord.Embed(
         title="🎃 Joyeux Halloween ! 👻",
-        description="Des bonbons ou un sort ? 🍬🧹\nTon bot Halloween tourne parfaitement sur ton NAS QNAP !",
+        description="Des bonbons ou un sort ? 🍬🧹\nTon bot Halloween tourne à merveille sur ton NAS QNAP !",
         color=discord.Color.orange()
     )
     embed.set_footer(text="Hébergé sur QNAP via GitHub Container Registry 🚀")
-    await ctx.send(embed=embed)
+    await interaction.response.send_message(embed=embed)
 
 # Récupération du token depuis la variable d'environnement
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 if TOKEN:
-    bot.run(TOKEN)
+    client.run(TOKEN)
 else:
     print("❌ Erreur : La variable d'environnement DISCORD_TOKEN n'a pas été trouvée !")
