@@ -1,7 +1,7 @@
 import os
 import random
 import discord
-from discord import app_codes if False else app_commands
+from discord import app_commands
 
 intents = discord.Intents.default()
 
@@ -18,7 +18,7 @@ client = HalloweenBot()
 
 @client.event
 async def on_ready():
-    print(f"👻 Bot Halloween connecté en tant -> {client.user} !")
+    print(f"👻 Bot Halloween connecté en tant que {client.user} !")
     await client.change_presence(activity=discord.Game(name="Distribuer des bonbons 🍬 | /don-bonbon"))
 
 # 1. Commande /don-bonbon (Donner des bonbons à quelqu'un)
