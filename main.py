@@ -12,13 +12,13 @@ class HalloweenBot(discord.Client):
 
     async def setup_hook(self):
         await self.tree.sync()
-        print("🎃 Commandes slash d'Halloween synchronisées avec succès !")
+        print("🎃 Commandes slash d'Halloween synchronisées avec succès ! 👻")
 
 client = HalloweenBot()
 
 @client.event
 async def on_ready():
-    print(f"👻 Bot Halloween connecté en tant que {client.user} !")
+    print(f"👻 Bot Halloween connecté en tant que {client.user} ! 🦇")
     await client.change_presence(activity=discord.Game(name="Distribuer des bonbons 🍬 | /don-bonbon"))
 
 # 1. Commande /don-bonbon (Donner des bonbons à quelqu'un)
