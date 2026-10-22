@@ -3,8 +3,8 @@ import random
 import discord
 from discord import app_commands
 
+# Utilisation des intents par défaut (sans privilèges restreints)
 intents = discord.Intents.default()
-intents.message_content = True  # Nécessaire pour détecter les messages et les réactions dans les salons
 
 class HalloweenBot(discord.Client):
     def __init__(self):
@@ -17,7 +17,7 @@ class HalloweenBot(discord.Client):
 
 client = HalloweenBot()
 
-# Dictionnaire simple pour stocker les bonbons des utilisateurs en mémoire
+# Dictionnaire pour stocker les bonbons des utilisateurs
 chaudrons = {}
 
 @client.event
@@ -25,35 +25,13 @@ async def on_ready():
     print(f"👻 Bot Halloween connecté en tant que {client.user} ! 🦇")
     await client.change_presence(activity=discord.Game(name="Événement d'Halloween 🎃 | /halloween"))
 
-# Événement aléatoire : Le bot lâche parfois un bonbon mystère dans les salons !
-@client.event
-async def on_message(message):
-    if message.author.bot:
-        return
-
-    # 5% de chance qu'un message déclenche l'apparition d'un bonbon bonus dans le salon
-    if random.random() < 0.05:
-        candy_message = await message.channel.send("🎃 **Oh non ! Un bonbon magique vient d'apparaître dans le salon ! Réagis vite avec 🍬 pour le ramasser !** 👻")
-        await candy_message.add_reaction("🍬")
-
-        def check_reaction(reaction, user):
-            return not user.bot and str(reaction.emoji) == "🍬" and reaction.message.id == candy_message.id
-
-        try:
-            reaction, user = await client.wait_for('reaction_add', timeout=30.0, check=check_reaction)
-            # Ajoute 1 bonbon au chaudron du joueur
-            chaudrons[user.id] = chaudrons.get(user.id, 0) + 1
-            await message.channel.send(f"🎉 Bravo {user.mention} ! Tu as été le plus rapide à attraper le bonbon ! Il rejoint ton chaudron 🍬 (Total : {chaudrons[user.id]} bonbons).")
-        except:
-            await candy_message.edit(content="🎃 Le bonbon mystère a fondu dans l'obscurité... Personne ne l'a pris ! 🦇")
-
 # --- COMMANDES SLASH ---
 
 @client.tree.command(name="halloween", description="Détails et explications de l'évènement d'Halloween 🎃")
 async def halloween_info(interaction: discord.Interaction):
     embed = discord.Embed(
         title="🎃 Évènement Saisonnier d'Halloween",
-        description="Bienvenue dans l'événement officiel ! Chassez des bonbons, consultez votre chaudron, jetez des sorts et soyez à l'affût des bonbons cachés dans les salons ! 🦇🕸️",
+        description="Bienvenue dans l'événement officiel ! Chassez des bonbons, consultez votre chaudron et jetez des sorts ! 🦇🕸️",
         color=discord.Color.orange()
     )
     await interaction.response.send_message(embed=embed)
